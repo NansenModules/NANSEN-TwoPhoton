@@ -1,0 +1,223 @@
+{
+  "_type": "NANSEN Identifier Rename Map",
+  "_description": "Stored identifiers that changed when the two-photon module moved out of NANSEN core into its own repository (2026). Consumed by nansen.module.twophoton.migrateProject through nansen.config.project.renameStoredIdentifiers.",
+  "_version": "1.0.0",
+  "Renames": [
+    {
+      "Old": "nansen.module.ophys.twophoton",
+      "New": "nansen.module.twophoton",
+      "Match": "exact",
+      "Note": "Module name stored in a project's DataModule preference"
+    },
+    {
+      "Old": "nansen.module.ophys.twophoton",
+      "New": "nansen.module.twophoton",
+      "Match": "prefix",
+      "Note": "Session methods, file adapters and workflow scope ids under the module package"
+    },
+    {
+      "Old": "nansen.twophoton.roisignals",
+      "New": "nansen.module.twophoton.roisignals",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.twophoton.roi",
+      "New": "nansen.module.twophoton.roi",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.twophoton.roimasks.autosegmentationOptions",
+      "New": "nansen.module.twophoton.autosegmentation.autosegmentationOptions",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.twophoton.autosegmentation",
+      "New": "nansen.module.twophoton.autosegmentation",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.processing.SignalExtractor",
+      "New": "nansen.module.twophoton.roisignals.SignalExtractor",
+      "Match": "exact",
+      "Note": "Also the OptionsManager identifier of saved option sets"
+    },
+    {
+      "Old": "nansen.processing.RoiSegmentation",
+      "New": "nansen.module.twophoton.autosegmentation.RoiSegmentation",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.processing.MotionCorrection",
+      "New": "nansen.module.twophoton.motioncorrection.MotionCorrection",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.processing.MotionCorrectionPreview",
+      "New": "nansen.module.twophoton.motioncorrection.MotionCorrectionPreview",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.processing.roi",
+      "New": "nansen.module.twophoton.roi",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.roisignals.RoiSignalArray",
+      "New": "nansen.module.twophoton.roisignals.RoiSignalArray",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.roisignals.RoiSignalArrayExtracted",
+      "New": "nansen.module.twophoton.roisignals.RoiSignalArrayExtracted",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.roisignals.LiveRoiSignalArray",
+      "New": "nansen.module.twophoton.roisignals.LiveRoiSignalArray",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "flufinder",
+      "New": "nansen.module.twophoton.autosegmentation.flufinder",
+      "Match": "prefix",
+      "Note": "Top-level flufinder package"
+    },
+    {
+      "Old": "nansen.wrapper.quicky",
+      "New": "nansen.module.twophoton.autosegmentation.flufinder",
+      "Match": "prefix",
+      "Note": "Processor, Options, presets and utility; also OptionsManager identifier nansen.wrapper.quicky.Processor"
+    },
+    {
+      "Old": "nansen.wrapper.suite2p",
+      "New": "nansen.module.twophoton.integration.suite2p",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.wrapper.extract",
+      "New": "nansen.module.twophoton.integration.extract",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.wrapper.normcorre",
+      "New": "nansen.module.twophoton.integration.normcorre",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.wrapper.flowreg",
+      "New": "nansen.module.twophoton.integration.flowreg",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "ophys.twophoton.getFlowregMetrics",
+      "New": "nansen.module.twophoton.integration.flowreg.getFlowregMetrics",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "ophys.twophoton",
+      "New": "nansen.module.twophoton.motioncorrection",
+      "Match": "prefix",
+      "Note": "Drift analysis, binned averages and drift plotting from the old algorithms package"
+    },
+    {
+      "Old": "nansen.stack.virtual.SciScanRaw",
+      "New": "nansen.module.twophoton.io.sciscan.SciScanRaw",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.stack.virtual.ScanImageTiff",
+      "New": "nansen.module.twophoton.io.scanimage.ScanImageTiff",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.stack.virtual.ScanImageMultiRoiTiff",
+      "New": "nansen.module.twophoton.io.scanimage.ScanImageMultiRoiTiff",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.stack.virtual.PrairieViewTiffs",
+      "New": "nansen.module.twophoton.io.prairieview.PrairieViewTiffs",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.stack.virtual.ThorLabsTiffs",
+      "New": "nansen.module.twophoton.io.thorlabs.ThorLabsTiffs",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.stack.virtual.MDF",
+      "New": "nansen.module.twophoton.io.mscan.MDF",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.stack.virtual.Suite2pCorrected",
+      "New": "nansen.module.twophoton.integration.suite2p.Suite2pCorrected",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.stack.utility.TwoPhotonRecording",
+      "New": "nansen.module.twophoton.io.TwoPhotonRecording",
+      "Match": "exact",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.plugin.imviewer",
+      "New": "nansen.module.twophoton.ui.imviewer",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "nansen.plugin.signalviewer",
+      "New": "nansen.module.twophoton.ui.signalviewer",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "imviewer.plugin.NoRMCorre",
+      "New": "nansen.module.twophoton.ui.imviewer.NoRMCorre",
+      "Match": "exact",
+      "Note": "Deleted back-compat shim"
+    },
+    {
+      "Old": "imviewer.plugin.FlowRegistration",
+      "New": "nansen.module.twophoton.ui.imviewer.FlowRegistration",
+      "Match": "exact",
+      "Note": "Deleted back-compat shim"
+    },
+    {
+      "Old": "roimanager.autosegment",
+      "New": "nansen.module.twophoton.roi",
+      "Match": "prefix",
+      "Note": ""
+    },
+    {
+      "Old": "roimanager.binarize.improveMaskEstimate2",
+      "New": "nansen.module.twophoton.autosegmentation.improveMaskEstimate2",
+      "Match": "exact",
+      "Note": ""
+    }
+  ]
+}
