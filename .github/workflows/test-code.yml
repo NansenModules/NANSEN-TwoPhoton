@@ -1,0 +1,43 @@
+name: Test code
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '*md'
+      - '.github/**'
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ "main" ]
+    paths-ignore:
+      - '*md'
+      - '.github/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  checks: write
+  security-events: write
+
+jobs:
+  test-code:
+    name: Analyse and test code
+    uses: ehennestad/matbox-actions/.github/workflows/test-code-workflow.yml@v1
+    with:
+      # The module package lives under code/; code analysis and coverage run there.
+      source_directory: code
+      tests_directory: tests
+      # tools/tasks/testToolbox.m installs NANSEN before running the suites.
+      tools_directory: tools
+      matlab_release: latest
+      matlab_use_cache: true
+      matlab_products: >
+        Image_Processing_Toolbox
+        Statistics_and_Machine_Learning_Toolbox
+      needs_virtual_display: true
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

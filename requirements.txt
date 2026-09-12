@@ -1,0 +1,7 @@
+# Dependencies installed by MatBox: matbox.installRequirements(<repo root>)
+#
+# NANSEN is the runtime host. tools/tasks/testToolbox.m installs it with its
+# own requirements before running the tests.
+https://github.com/VervaekeLab/NANSEN@remove-two-photon-module
+# Required by the ScanImage readers (see the module dependency manifest).
+https://github.com/DylanMuir/TIFFStack

@@ -1,0 +1,15 @@
+{
+    "Namespace" : "nansen",
+    "ToolboxOptions": {
+        "Identifier": "2f4d1c7e-9b3a-4e6f-8c21-7a5d3e9f0b64",
+        "ToolboxName": "NANSEN Two-Photon Module",
+        "AuthorName": "Eivind Hennestad",
+        "AuthorEmail": "eivihe@uio.no",
+        "AuthorCompany": "VervaekeLab",
+        "Summary": "Two-photon calcium imaging module for NANSEN",
+        "Description": "Session methods, file adapters, scanner readers, ROI signal extraction, autosegmentation, motion correction and toolbox integrations for two-photon imaging in NANSEN.",
+        "MinimumMatlabRelease": "R2023a",
+        "MaximumMatlabRelease": "",
+        "ToolboxGettingStartedGuide": ""
+    }
+}
