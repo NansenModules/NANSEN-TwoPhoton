@@ -177,9 +177,9 @@ function [edgeCoords, stat] = findEdge(grad, polarity)
 
     switch polarity
         case 'fall'
-            peakfun = @nanmin;
+            peakfun = @min; % ignores NaN, as the toolbox variant did
         case 'rise'
-            peakfun = @nanmax;
+            peakfun = @max; % ignores NaN, as the toolbox variant did
     end
 
     [edgeVal, edgeCoords] = peakfun(grad);

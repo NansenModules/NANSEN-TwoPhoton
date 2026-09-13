@@ -54,5 +54,49 @@ classdef FluFinderDetectionTest < matlab.unittest.TestCase
             rois = testCase.findRois(S);
             testCase.verifyNumElements(rois, 2)
         end
+
+        function testOverlappingCellsWithSplitCentroidsGiveTwoRois(testCase)
+            % Two cells overlap, so the components containing the shared
+            % peak pixel have centroids in two groups and the median lies
+            % between them. The picker must fall back to the largest
+            % centroid cluster (formerly linkage/cluster from the
+            % Statistics Toolbox) and still separate the two cells.
+            S = [testCase.createComponents([20, 20], 5, 2); ...
+                 testCase.createComponents([28, 20], 5, 2)];
+            rois = testCase.findRois(S);
+            testCase.verifyClass(rois, 'RoI')
+            testCase.verifyNumElements(rois, 2)
+        end
+    end
+
+    methods (Test) % findLargestCentroidCluster
+
+        function testLargestClusterIsMarked(testCase)
+            points = [0 0; 1 0; 10 10; 11 10; 10.5 11];
+            isInCluster = nansen.module.twophoton.autosegmentation.flufinder.utility. ...
+                findLargestCentroidCluster(points, 3);
+            testCase.verifyEqual(isInCluster, logical([0; 0; 1; 1; 1]))
+        end
+
+        function testChainsWithinRadiusFormOneCluster(testCase)
+            points = [0 0; 2 0; 4 0; 6 0];
+            isInCluster = nansen.module.twophoton.autosegmentation.flufinder.utility. ...
+                findLargestCentroidCluster(points, 2.5);
+            testCase.verifyTrue(all(isInCluster))
+        end
+
+        function testTiesGoToTheFirstCluster(testCase)
+            points = [0 0; 1 0; 20 20; 21 20];
+            isInCluster = nansen.module.twophoton.autosegmentation.flufinder.utility. ...
+                findLargestCentroidCluster(points, 3);
+            testCase.verifyEqual(isInCluster, logical([1; 1; 0; 0]))
+        end
+
+        function testNoPointsGiveNoMembers(testCase)
+            isInCluster = nansen.module.twophoton.autosegmentation.flufinder.utility. ...
+                findLargestCentroidCluster(zeros(0, 2), 3);
+            testCase.verifyEmpty(isInCluster)
+            testCase.verifyClass(isInCluster, 'logical')
+        end
     end
 end

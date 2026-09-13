@@ -19,7 +19,6 @@ function [newComponents, summary] = mergeWeightedComponents(imageSize, S, vararg
     meanDiameter = mean( [S.EquivDiameter] );
     centroidTolerance = ceil( meanDiameter / 4 );
 
-    warning('off', 'stats:linkage:NonMonotonicTree')
 
     imageSize = imageSize(1:2); % In case imageSize is size of stack
 
@@ -86,7 +85,7 @@ function [newComponents, summary] = mergeWeightedComponents(imageSize, S, vararg
         % is to find all centroids that are less than X pixels away from the
         % median centroid position. In rare cases, where there might be two
         % or more clusters of centroids and the median centroid position
-        % falls between these, use linkage to find and pick the biggest
+        % falls between these, keep the largest cluster of centroids
         % cluster. X equals the centroidTolerance
 
         centroidOffset = abs( cat(1, S(containsPeak).Centroid ) - center );
@@ -94,14 +93,9 @@ function [newComponents, summary] = mergeWeightedComponents(imageSize, S, vararg
         if ~isempty(keep)
             containsPeak = containsPeak(keep);
         else
-            % Find cluster of center positions using linkage
-            Z = linkage(currentCentroids, 'centroid', 'euclidean');
-            T = cluster(Z, 'Cutoff', 3, 'Criterion', 'distance');
-            nClusters = max(T);
-
-            nPointsinCluster = arrayfun(@(j) sum(T==j), 1:nClusters);
-            [~, maxTind] = max(nPointsinCluster);
-            keepB = T == maxTind;
+            % The centroids form several groups; keep the largest one.
+            keepB = nansen.module.twophoton.autosegmentation.flufinder.utility.findLargestCentroidCluster(...
+                currentCentroids, 3);
 
             containsPeak = containsPeak(keepB);
         end
@@ -162,7 +156,6 @@ function [newComponents, summary] = mergeWeightedComponents(imageSize, S, vararg
 
     summary.ComponentImageFinished = componentImage;
 
-    warning('on', 'stats:linkage:NonMonotonicTree')
     fprintf(newline)
 
     overlap = params.PercentOverlapForMerge ./ 100;
