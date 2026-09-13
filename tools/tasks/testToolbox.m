@@ -19,10 +19,27 @@ function testToolbox(varargin)
         "AddToPath", false, "Verbose", true);
     addpath(genpath(fullfile(nansenInstall.FilePath, "code")))
 
-    matbox.installRequirements(nansenInstall.FilePath, "AgreeToLicenses", true)
+    installNansenRequirements(nansenInstall.FilePath)
     matbox.installRequirements(projectRoot, "AgreeToLicenses", true)
 
     matbox.tasks.testToolbox(projectRoot, varargin{:})
+end
+
+function installNansenRequirements(nansenFolder)
+%installNansenRequirements Install NANSEN's requirements except this module
+%
+%   NANSEN requires this module, so its requirements list the module's
+%   own repository. The checkout being tested already is the module, and
+%   MatBox would resolve the entry to the wrong folder on a GitHub runner
+%   (the repository is checked out at <name>/<name>), so that entry is
+%   skipped and everything else is installed as installRequirements would.
+    requirements = matbox.setup.internal.getRequirements(nansenFolder);
+    isKnownType = ismember(string({requirements.Type}), ["GitHub", "FileExchange"]);
+    isThisModule = contains(string({requirements.URI}), "NansenModules/NANSEN-TwoPhoton");
+    for requirement = requirements(isKnownType & ~isThisModule)
+        matbox.setup.installFromSourceUri(requirement.URI, ...
+            "AgreeToLicense", true, "Verbose", true);
+    end
 end
 
 function sourceUri = getNansenSourceUri(projectRoot)
