@@ -188,15 +188,11 @@ classdef MotionCorrection < nansen.stack.ImageStackProcessor
                           obj.SourceStack, 'DataIoModel', obj.DataIoModel);
             processor.IsSubProcess = true;
 
-            if true % obj.RecastOutput % Calculate imagestats if needed (for recasting).
-                obj.displayStartStep('pixelstats')
-                processor.runMethod()
-                obj.displayFinishStep('pixelstats')
-            else
-                % Can be computed during motion correction
-                obj.ImageStatsProcessor = processor;
-                obj.ImageStatsProcessor.matchConfiguration(obj) % todo..
-            end
+            % Image statistics are always computed up front. Computing them
+            % during motion correction (ImageStatsProcessor) is not implemented.
+            obj.displayStartStep('pixelstats')
+            processor.runMethod()
+            obj.displayFinishStep('pixelstats')
 
             numFrames = stackSize(end); % Todo...
             dataTypeIn = obj.SourceStack.DataType;
@@ -376,14 +372,8 @@ classdef MotionCorrection < nansen.stack.ImageStackProcessor
                 % Todo: Make sure this does not leave black edges!
                 [Y, drift] = obj.correctDrift(Y);
 
-                % Todo:
-                updateReference = false;
-                if updateReference
-                    obj.CurrentRefImage = imtranslate( obj.CurrentRefImage, [drift(1), drift(2)] );
-                    % Write reference image to file.
-                    templateOut = cast(obj.CurrentRefImage, obj.SourceStack.DataType);
-                    obj.DerivedStacks.ReferenceStack.writeFrameSet(obj.CurrentRefImage, obj.CurrentPart)
-                end
+                % Shifting the reference image by the drift and writing it
+                % back to the reference stack is not implemented.
 
                 % Add drift to shifts.
                 obj.addDriftToShifts(drift)

@@ -1,165 +1,159 @@
-function data=readrawfile(filename,skipframes,channel,frames)
+function data = readrawfile(filePath, options)
+%readrawfile Read image frames from a SciScan .raw recording file
+%
+%   data = readrawfile(filePath) reads every frame of every recorded
+%   channel from the .raw file at filePath. The layout of the file comes
+%   from the .ini file with the same name next to it: image size
+%   (x.pixels, y.pixels), sample type (file.format: 0 for uint16, 1 for
+%   single) and the recorded channels (save.ch.N or ai.activeN). Samples
+%   are stored big-endian, x fastest, one x-by-y block per channel for
+%   each frame.
+%
+%   data has size x-by-y-by-numFrames-by-numChannels in the sample type
+%   of the file, and x-by-y-by-numFrames when one channel is requested.
+%
+%   data = readrawfile(filePath, Name, Value) selects what to read:
+%       Channel    - "all" (default), or the 1-based number of one channel
+%       SkipFrames - number of frames to skip at the start (default 0)
+%       NumFrames  - number of frames to read after the skipped ones
+%                    (default: all that remain). If fewer are present the
+%                    available frames are returned with a warning.
+%
+%   See also nansen.module.twophoton.io.sciscan.readinivar,
+%   nansen.module.twophoton.io.sciscan.SciScanRaw
 
-%
-%
-%
-% syntax:
-% data=readrawfile(filename,skipframes,channel,frames);
-%
-% filename: a string containing the entire path and filename of the raw file
-%               to read; leave empty to prompt file selection dialog
-% skipframes: number of frames to skip at the beginning of the raw file
-% channel: options are   'first' - loads only channel 1
-%                        'second' - loads only channel 2
-%                        'all' - loads all channels
-% frames: number of frames to load; leave empty to load all frames
-%
-%
-% usage examples:
-%
-% data=readrawfile;
-%                   opens file selection dialog and loads all frames of
-%                   selected raw file
-%
-% data=readrawfile('H:\test\(20131024_07_21_50)\(20131024_07_21_50)_test_XYT.raw');
-%                   reads the specified file
-%
-% data=readrawfile([],10,'first');
-%                   opens file selection dialog, skips the first ten frames, then loads all frames of
-%                   channel 1 of the selected raw file
-%
-% data=readrawfile([],10,'second',100);
-%                   opens file selection dialog, skips the first ten frames, then loads 100 frames of
-%                   channel 2 of the selected raw file
-%
+    arguments
+        filePath (1,1) string {mustBeFile}
+        options.Channel = "all"
+        options.SkipFrames (1,1) double {mustBeInteger, mustBeNonnegative} = 0
+        options.NumFrames double {mustBeScalarOrEmpty, mustBeInteger, mustBeNonnegative} = []
+    end
 
-import nansen.module.twophoton.io.sciscan.readinivar
+    layout = readFileLayout(filePath);
+    channelIndex = validateChannel(options.Channel, layout.NumChannels);
+    readAllChannels = isempty(channelIndex);
 
-prevstr=[];
-if ~exist('filename') || ~ischar(filename)
-    [FileName,PathName] = uigetfile('*.raw','Select raw data file');
-    filename=fullfile(PathName,FileName);
-end
-if ~exist('channel') || ~ischar(channel)
-    channel='all';
-end
+    samplesPerBlock = layout.Width * layout.Height;
+    bytesPerBlock = samplesPerBlock * layout.BytesPerSample;
+    bytesPerFrame = bytesPerBlock * layout.NumChannels;
 
-% obtain metadata from ini file
-[pathstr, filenameWOext] = fileparts(filename);
-inifilename=[filenameWOext '.ini'];
-inistring=fileread(fullfile(pathstr,inifilename));
-x=readinivar(inistring,'x.pixels');
-y=readinivar(inistring,'y.pixels');
-%framecount=readVarIni(inistring,'no..of.frames.to.acquire');
-framecount=readinivar(inistring,'no.of.frames.acquired');
-fileformat=readinivar(inistring,'file.format');
+    fileInfo = dir(filePath);
+    numFramesAvailable = max(0, floor(fileInfo.bytes / bytesPerFrame) - options.SkipFrames);
+    if isempty(options.NumFrames)
+        numFrames = numFramesAvailable;
+    else
+        numFrames = options.NumFrames;
+        if numFrames > numFramesAvailable
+            warning('NANSEN:TwoPhoton:SciScan:FewerFramesThanRequested', ...
+                ['Requested %d frames of "%s" but only %d are available ', ...
+                 'after skipping %d; reading %d.'], numFrames, filePath, ...
+                numFramesAvailable, options.SkipFrames, numFramesAvailable)
+            numFrames = numFramesAvailable;
+        end
+    end
 
-% count how many channels were recorded
-recorded_ch=0;
-for i=0:5;
-    if strcmp(strtrim(char(readinivar(inistring,['save.ch.' num2str(i)]))),'TRUE') || strcmp(strtrim(char(readinivar(inistring,['ai.active' num2str(i)]))),'TRUE')
-recorded_ch=recorded_ch+1;
+    precision = sprintf('%s=>%s', layout.SourceType, layout.SampleType);
+    fileId = fopen(filePath, 'r', 'b');
+    if fileId == -1
+        error('NANSEN:TwoPhoton:SciScan:CannotOpenFile', 'Could not open "%s".', filePath)
+    end
+    fileCleanup = onCleanup(@() fclose(fileId));
+
+    if readAllChannels
+        fseek(fileId, options.SkipFrames * bytesPerFrame, 'bof');
+        data = fread(fileId, [samplesPerBlock * layout.NumChannels, numFrames], precision);
+        expectedSize = [layout.Width, layout.Height, layout.NumChannels, numFrames];
+        assertNumberOfSamples(data, expectedSize, filePath)
+        data = permute(reshape(data, expectedSize), [1, 2, 4, 3]);
+    else
+        % Read one block per frame and skip the other channels' blocks.
+        fseek(fileId, options.SkipFrames * bytesPerFrame + (channelIndex - 1) * bytesPerBlock, 'bof');
+        blockPrecision = sprintf('%d*%s', samplesPerBlock, precision);
+        skipBytes = (layout.NumChannels - 1) * bytesPerBlock;
+        data = fread(fileId, [samplesPerBlock, numFrames], blockPrecision, skipBytes);
+        expectedSize = [layout.Width, layout.Height, numFrames];
+        assertNumberOfSamples(data, expectedSize, filePath)
+        data = reshape(data, expectedSize);
     end
 end
 
-% determine bitdepth from file.format variable
+function layout = readFileLayout(filePath)
+%readFileLayout Image size, sample type and channel count from the .ini file
+    import nansen.module.twophoton.io.sciscan.readinivar
 
-if fileformat==1; % 32 bit raw file
-  precparam1='*float32=>float32';
-  precparam2=4;
-  precparam3='single';
-elseif fileformat==0; % 16 bit raw file
-    precparam1='*uint16=>uint16';
-    precparam2=2;
-    precparam3='uint16';
-else
-    disp([filename ' is not a recognized file format.']);
-return
-end
+    [folderPath, baseName] = fileparts(filePath);
+    iniPath = fullfile(folderPath, baseName + ".ini");
+    if ~isfile(iniPath)
+        error('NANSEN:TwoPhoton:SciScan:IniFileNotFound', ...
+            'The .ini file describing "%s" was not found next to it.', filePath)
+    end
+    iniText = fileread(iniPath);
 
-if ~exist('frames') || isempty(frames)
-    frames=framecount;
-end
+    layout.Width = requireNumber(readinivar(iniText, 'x.pixels'), 'x.pixels', iniPath);
+    layout.Height = requireNumber(readinivar(iniText, 'y.pixels'), 'y.pixels', iniPath);
 
-fid=fopen(filename,'r','b');
-
-    if exist('skipframes') && ~isempty(skipframes)
-        fseek(fid,skipframes.*recorded_ch.*precparam2.*prod([x y]),'bof');
+    fileFormat = requireNumber(readinivar(iniText, 'file.format'), 'file.format', iniPath);
+    switch fileFormat
+        case 0
+            layout.SourceType = 'uint16';
+            layout.SampleType = 'uint16';
+            layout.BytesPerSample = 2;
+        case 1
+            layout.SourceType = 'float32';
+            layout.SampleType = 'single';
+            layout.BytesPerSample = 4;
+        otherwise
+            error('NANSEN:TwoPhoton:SciScan:UnsupportedFileFormat', ...
+                'file.format %g in "%s" is not supported (0 = uint16, 1 = single).', ...
+                fileFormat, iniPath)
     end
 
-    switch channel
-
-        case 'first'
-            eval(['data=' precparam3 '(zeros(x*y,frames));']);
-            for fr=1:frames;
-
-% % %                 if ~rem(fr, 100) && frames > 1
-% % %                     str=['loading frame ' num2str(fr) '/' num2str(frames)];
-% % %
-% % %                     refreshdisp(str,prevstr,fr);
-% % %                     prevstr=str;
-% % %                 end
-                try
-                data(:,fr)=fread(fid,prod([x y]),[num2str(prod([x y])) precparam1],(recorded_ch-1)*precparam2*prod([x y]));
-                catch
-                    fr=fr-1;
-                    data=data(:,1:fr);
-                    break
-                end
-            end
-            data=reshape(data,[x y fr]);
-
-        case 'second'
-            eval(['data=' precparam3 '(zeros(x*y,frames));']);
-            if recorded_ch > 1
-                dump = fread(fid,prod([x y]),['1' precparam1]);
-            end
-
-            for fr=1:frames;
-
-% % %                 if ~rem(fr,10) && frames > 1
-% % %                     str=['loading frame ' num2str(fr) '/' num2str(frames)];
-% % %
-% % %                     refreshdisp(str,prevstr,fr);
-% % %                     prevstr=str;
-% % %                 end
-                try
-                data(:,fr)=fread(fid,prod([x y]),[num2str(prod([x y])) precparam1],(recorded_ch-1)*precparam2*prod([x y]));
-                catch
-                    fr=fr-1;
-                    data=data(:,1:fr);
-                    break
-                end
-            end
-            data=reshape(data,[x y fr]);
-
-        case 'all'
-            y=y*recorded_ch;
-            eval(['data=' precparam3 '(zeros(x*y,frames));']);
-
-            for fr=1:frames;
-% % %                 if ~rem(fr,10) && frames > 1
-% % %                     str=['loading frame ' num2str(fr) '/' num2str(frames)];
-% % %
-% % %                     refreshdisp(str,prevstr,fr);
-% % %                     prevstr=str;
-% % %                 end
-                try
-                data(:,fr)=fread(fid,prod([x y]),[num2str(prod([x y])) precparam1]);
-                catch
-                    fr=fr-1;
-                    data=data(:,1:fr);
-                    break
-                end
-            end
-            data=reshape(data,[x y/recorded_ch recorded_ch fr]);
-            data=permute(data,[1 2 4 3]);
+    layout.NumChannels = countRecordedChannels(iniText);
+    if layout.NumChannels == 0
+        error('NANSEN:TwoPhoton:SciScan:NoRecordedChannels', ...
+            'No recorded channel (save.ch.N or ai.activeN) is marked TRUE in "%s".', iniPath)
     end
+end
 
-% % % if frames > 1
-% % %     fprintf(char(8*ones(1,length(prevstr))));
-% % %     fprintf('Loaded all images.');
-% % %     fprintf('\n');
-% % % end
+function numChannels = countRecordedChannels(iniText)
+%countRecordedChannels Channels flagged save.ch.N or ai.activeN in the .ini
+    import nansen.module.twophoton.io.sciscan.readinivar
 
-fclose(fid);
+    numChannels = 0;
+    for iChannel = 0:5
+        isSaved = readinivar(iniText, sprintf('save.ch.%d', iChannel));
+        isActive = readinivar(iniText, sprintf('ai.active%d', iChannel));
+        if isequal(isSaved, true) || isequal(isActive, true)
+            numChannels = numChannels + 1;
+        end
+    end
+end
+
+function value = requireNumber(value, variableName, iniPath)
+    if ~(isnumeric(value) && isscalar(value))
+        error('NANSEN:TwoPhoton:SciScan:MissingIniVariable', ...
+            'The variable "%s" is missing or not a number in "%s".', variableName, iniPath)
+    end
+end
+
+function channelIndex = validateChannel(channel, numChannels)
+%validateChannel [] for all channels, otherwise the validated channel index
+    if (isstring(channel) || ischar(channel)) && strcmpi(channel, "all")
+        channelIndex = [];
+        return
+    end
+    isValidIndex = isnumeric(channel) && isscalar(channel) ...
+        && channel == round(channel) && channel >= 1 && channel <= numChannels;
+    if ~isValidIndex
+        error('NANSEN:TwoPhoton:SciScan:InvalidChannel', ...
+            'Channel must be "all" or an integer between 1 and %d.', numChannels)
+    end
+    channelIndex = channel;
+end
+
+function assertNumberOfSamples(data, expectedSize, filePath)
+    if numel(data) ~= prod(expectedSize)
+        error('NANSEN:TwoPhoton:SciScan:TruncatedFile', ...
+            '"%s" ended before the requested frames could be read.', filePath)
+    end
+end

@@ -47,11 +47,7 @@ end
 imArraySmooth = reshape(imArraySmooth, [], size(imArraySmooth,3));
 
 % compute noise variance across frames (assumes slow signal)
-if 1
-    sdmov = mean(diff(imArraySmooth, 1, 2).^2, 2).^.5;
-else
-    sdmov = mean(mov.^2,2).^.5;
-end
+sdmov = mean(diff(imArraySmooth, 1, 2).^2, 2).^.5;
 
 sdmov           = reshape(sdmov, Ly, Lx);
 sdmov           = max(1e-10, sdmov);

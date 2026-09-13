@@ -44,7 +44,6 @@ function [mask, stat] = findSomaMaskByEdgeDetection(im, varargin)
 % quantify the edgemagnitude.
 % quantify uniformness of edges and brightness inside donut
 
-    showPlot = false;
 
     % Todo: redefine parameters.
     params = struct();
@@ -135,11 +134,6 @@ function [mask, stat] = findSomaMaskByEdgeDetection(im, varargin)
         outerBoundarySmooth( outerBoundarySmooth<lb ) = lb;
         outerBoundarySmooth( outerBoundarySmooth>ub ) = ub;
 
-        if showPlot
-            showDetectedEdges(grad(:,:,i), tmpUnrolled, innerBoundary, ...
-                outerBoundary, innerBoundarySmooth, outerBoundarySmooth)              %#ok<UNRCH> % Local function
-        end
-
         % Scale back (spatial down sample)
         innerRadius = innerBoundarySmooth ./ upSampleFactor;
         outerRadius = outerBoundarySmooth ./ upSampleFactor;
@@ -180,7 +174,6 @@ end
 function [edgeCoords, stat] = findEdge(grad, polarity)
 
     stat = struct;
-    showPlot = false;
 
     switch polarity
         case 'fall'
@@ -193,19 +186,6 @@ function [edgeCoords, stat] = findEdge(grad, polarity)
 
     medianCoord = median(edgeCoords);
     stdCoord = std(edgeCoords);
-
-    if showPlot
-        persistent f ax hIm
-        if isempty(f) || ~isvalid(f)
-            f = figure('Position', [300,300,300,300]);
-            ax = axes('Position', [0,0,1,1]);
-        end
-        imagesc(ax, grad); hold on
-        plot(ax, 1:size(grad,2), edgeCoords, 'ow')
-        p = polyfit(1:size(grad,2), edgeCoords, 2);
-        y = polyval(p, 1:size(grad,2));
-        plot(ax, 1:size(grad,2), y, 'w')
-    end
 
     % Find big jumps in coords
     count = 0;
@@ -349,11 +329,7 @@ function stat = getStats(im, tmpUnrolled, innerBoundarySmooth, ...
     centerLine = mean([innerBoundarySmooth', outerBoundarySmooth'], 2); % For stats
 
     indCenter = sub2ind(size(tmpUnrolled), round(centerLine), (1:size(tmpUnrolled,2))');
-    try
     indInner = sub2ind(size(tmpUnrolled), round(innerBoundarySmooth)', (1:size(tmpUnrolled,2))');
-    catch
-        disp('a')
-    end
     indOuter = sub2ind(size(tmpUnrolled), round(outerBoundarySmooth)', (1:size(tmpUnrolled,2))');
 
     VAL = double(tmpUnrolled(indCenter));
@@ -370,26 +346,4 @@ function stat = getStats(im, tmpUnrolled, innerBoundarySmooth, ...
         isRidge = tmpUnrolled(indCenter) > tmpUnrolled(indInner) & tmpUnrolled(indCenter) > tmpUnrolled(indOuter);
         stat.ridgeFraction = mean(isRidge);
     end
-end
-
-function showDetectedEdges(grad, tmpUnrolled, edgeCoordsInn, ...
-    edgeCoordsOut, edgeCoordsInnS, edgeCoordsOutS)
-
-    persistent f ax hIm
-    if isempty(f) || ~isvalid(f)
-        f = figure('Position', [300,300,300,300]); axes('Position', [0,0,1,1]);
-        ax = axes(f, 'Position',[0,0,1,1]);
-    else
-        cla(ax)
-    end
-
-    h = imagesc(ax, grad); hold on
-
-    plot(ax, 1:size(tmpUnrolled, 2), edgeCoordsInn, 'ow')
-    plot(ax, 1:size(tmpUnrolled, 2), edgeCoordsOut, 'or')
-    plot(ax, 1:size(tmpUnrolled, 2), edgeCoordsInnS, 'w')
-    plot(ax, 1:size(tmpUnrolled, 2), edgeCoordsOutS, 'r')
-
-%     plot(1:size(unrolled,2), innerBnd, 'or')
-%     plot(1:size(unrolled,2), innerBnd1, 'r')
 end

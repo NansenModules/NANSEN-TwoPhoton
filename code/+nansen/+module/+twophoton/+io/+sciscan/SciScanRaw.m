@@ -51,10 +51,6 @@ methods % Implementation of VirtualArray abstract methods
         end
     end
 
-    function data = readFrameSet(obj, frameIndex)
-        % Todo
-    end
-
     function data = readFrames(obj, frameIndex) % Todo: Remove
         subs = repmat({':'}, 1, ndims(obj));
         subs{end} = frameIndex;
@@ -345,43 +341,8 @@ end
 methods (Static)
 
     function varvalue = readinivar(inistring, variablename)
-    %readinivar Function for reading variables from a sciscan ini file.
-
-        ind1=regexp([inistring ' '],variablename);
-        ind2=regexp(inistring,'\n');
-        ind2(end+1) = numel(inistring);
-
-        varvalue=[];
-
-        if ~isempty(ind1)
-
-            startIdx = ind1(1);
-            endIdx = ind2( find(ind2>startIdx,1,'first') );
-
-            varline=inistring(startIdx:endIdx);
-
-            s2=regexp(varline,'\=|\"','split');
-
-            for i=2:length(s2)
-                if sum(size(strtrim(s2{i})))
-
-                    varvalue = strtrim(s2{i});
-                    varvalue = regexprep(varvalue, ',', '.');
-
-                    if any( strcmp(varvalue, {'TRUE', 'FALSE'}) )
-                        varvalue = eval(lower(varvalue));
-                    else
-                        varvalue = str2num(varvalue);
-                        if ~isempty(varvalue)
-                            break
-                        else
-                            varvalue=s2{i};
-                            break
-                        end
-                    end
-                end
-            end
-        end
+    %readinivar Read a variable from sciscan ini text (see the io.sciscan function)
+        varvalue = nansen.module.twophoton.io.sciscan.readinivar(inistring, variablename);
     end
 
     function isValid = fileCheck(pathStr)
