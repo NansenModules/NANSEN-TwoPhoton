@@ -32,7 +32,6 @@ function [roisOut, summary] = findUniqueRoisFromComponents(imageSize, S, varargi
 
     params = utility.parsenvpairs(defaults, [], varargin);
 
-    warning('off', 'stats:linkage:NonMonotonicTree')
 
     imageSize = imageSize(1:2); % In case imageSize is size of stack
 
@@ -73,7 +72,6 @@ function [roisOut, summary] = findUniqueRoisFromComponents(imageSize, S, varargi
 
     if isempty(S) || isempty(allPixelIndices)
         % Nothing to pick from; the merge and tagging below need rois.
-        warning('on', 'stats:linkage:NonMonotonicTree')
         if nargout == 1
             clear summary
         end
@@ -118,20 +116,15 @@ function [roisOut, summary] = findUniqueRoisFromComponents(imageSize, S, varargi
         % is to find all centroids that are less than 3 pixels away from the
         % median centroid position. In rare cases, where there might be two
         % or more clusters of centroids and the median centroid position
-        % falls between these, use linkage to find and pick the biggest
+        % falls between these, keep the largest cluster of centroids
         % cluster
         keep = find(  all( abs( cat(1, S(containsPeak).Centroid ) - center ) < 3, 2) );
         if ~isempty(keep)
             containsPeak = containsPeak(keep);
         else
-            % Find cluster of center positions using linkage
-            Z = linkage(currentCentroids, 'centroid', 'euclidean');
-            T = cluster(Z, 'Cutoff', 3, 'Criterion', 'distance');
-            nClusters = max(T);
-
-            nPointsinCluster = arrayfun(@(j) sum(T==j), 1:nClusters);
-            [~, maxTind] = max(nPointsinCluster);
-            keepB = T == maxTind;
+            % The centroids form several groups; keep the largest one.
+            keepB = nansen.module.twophoton.autosegmentation.flufinder.utility.findLargestCentroidCluster(...
+                currentCentroids, 3);
 
             containsPeak = containsPeak(keepB);
         end
@@ -223,7 +216,6 @@ function [roisOut, summary] = findUniqueRoisFromComponents(imageSize, S, varargi
 
     summary.ComponentImageFinished = componentImage;
 
-    warning('on', 'stats:linkage:NonMonotonicTree')
     fprintf(newline)
 
     overlap = params.PercentOverlapForMerge ./ 100;

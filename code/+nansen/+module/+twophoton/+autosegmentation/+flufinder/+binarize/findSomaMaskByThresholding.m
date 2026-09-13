@@ -50,12 +50,12 @@ function [roiMask, stats] = findSomaMaskByThresholding(im, varargin)
 
     if ~isempty(nucleusValues)
         %  nucleus_val = median(nucleus_values);
-        mediCytosolValue = nanmedian(cytosolValues);
-        mediSurroundValue = nanmedian(surroundValues(1:round(end*0.6)));
+        mediCytosolValue = median(cytosolValues, 'omitnan');
+        mediSurroundValue = median(surroundValues(1:round(end*0.6)), 'omitnan');
         T = mediSurroundValue + (mediCytosolValue - mediSurroundValue) / 2;
     else
-        high_val = nanmedian(somaValues);
-        low_val = nanmedian(surroundValues);
+        high_val = median(somaValues, 'omitnan');
+        low_val = median(surroundValues, 'omitnan');
 
         T = low_val + (high_val - low_val) / 2;
     end
@@ -85,8 +85,8 @@ function stats = createStats(im, roiMask)
 %createStats Create stats based on detected roimask
     stats = struct;
 
-    roiBrightness = nanmedian(nanmedian( im(roiMask) ));
-    pilBrightness = nanmedian(nanmedian( im(~roiMask) ));
+    roiBrightness = median(im(roiMask), 'omitnan');
+    pilBrightness = median(im(~roiMask), 'omitnan');
 
     stats.dff = (roiBrightness-pilBrightness+1) ./ (pilBrightness+1);
     stats.val = roiBrightness;

@@ -87,9 +87,19 @@ function stats = dffprops(dff, varargin)
     end
 
     if getAll || get('DffSkewness')
-        dffSkew = double( skewness(dff, 1, 1) );
+        dffSkew = double( columnSkewness(dff) );
         stats.DffSkewness = transpose(dffSkew); % submit as columnvec
     end
+end
+
+function sk = columnSkewness(x)
+%columnSkewness Biased sample skewness of each column (skewness(x, 1, 1))
+%
+%   Third central moment over the cube of the population standard
+%   deviation, computed here so that the Statistics and Machine Learning
+%   Toolbox is not needed.
+    centered = x - mean(x, 1);
+    sk = mean(centered.^3, 1) ./ std(x, 1, 1).^3;
 end
 
 function sn = GetSn(Y, range_ff, method)

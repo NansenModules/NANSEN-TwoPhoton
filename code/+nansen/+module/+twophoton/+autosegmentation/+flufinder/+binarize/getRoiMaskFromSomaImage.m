@@ -36,13 +36,13 @@ function roiMask = getRoiMaskFromSomaImage(im, varargin)
 
     if ~isempty(nucleusValues)
         %  nucleus_val = median(nucleus_values);
-        mediCytosolValue = nanmedian(cytosolValues);
-        mediSurroundValue = nanmedian(surroundValues(1:round(end*0.6)));
+        mediCytosolValue = median(cytosolValues, 'omitnan');
+        mediSurroundValue = median(surroundValues(1:round(end*0.6)), 'omitnan');
         T = mediSurroundValue + (mediCytosolValue - mediSurroundValue) / 2;
 
     else
-        high_val = nanmedian(somaValues);
-        low_val = nanmedian(surroundValues);
+        high_val = median(somaValues, 'omitnan');
+        low_val = median(surroundValues, 'omitnan');
 
         T = low_val + (high_val - low_val) / 2;
     end

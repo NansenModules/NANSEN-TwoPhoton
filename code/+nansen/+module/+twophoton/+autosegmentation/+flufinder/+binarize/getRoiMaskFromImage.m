@@ -59,8 +59,8 @@ function stats = getStats(im, mask)
 
     stats = struct;
 
-    roiBrightness = nanmedian(nanmedian( im(mask) ));
-    pilBrightness = nanmedian(nanmedian( im(~mask) ));
+    roiBrightness = median(im(mask), 'omitnan');
+    pilBrightness = median(im(~mask), 'omitnan');
 
     stats.dff = (roiBrightness-pilBrightness+1) ./ (pilBrightness+1);
     stats.val = roiBrightness;
