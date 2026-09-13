@@ -52,5 +52,28 @@ classdef RoiStatsTest < matlab.unittest.TestCase
             stats = nansen.module.twophoton.roi.stats.dffprops(dff, 'DffPeak');
             testCase.verifyEqual(stats.DffPeak, max(dff, [], 1)')
         end
+
+        function testOnlyRequestedFieldsAreReturned(testCase)
+            % Both documented call forms must select fields; neither may
+            % compute the noise level, which needs the Signal Processing
+            % Toolbox, when only peak and skewness are asked for.
+            dff = testCase.createDff();
+            positional = nansen.module.twophoton.roi.stats.dffprops(dff, 'DffPeak', 'DffSkewness');
+            nameValue = nansen.module.twophoton.roi.stats.dffprops(dff, 'Properties', {'DffPeak', 'DffSkewness'});
+            testCase.verifyEqual(sort(fieldnames(positional)), {'DffPeak'; 'DffSkewness'})
+            testCase.verifyEqual(positional, nameValue)
+        end
+
+        function testNoiseBasedFieldsNeedTheSignalProcessingToolbox(testCase)
+            dff = testCase.createDff();
+            if exist('pwelch', 'file') == 2
+                stats = nansen.module.twophoton.roi.stats.dffprops(dff, 'DffActivityLevel');
+                testCase.verifySize(stats.DffActivityLevel, [3, 1])
+            else
+                testCase.verifyError( ...
+                    @() nansen.module.twophoton.roi.stats.dffprops(dff, 'DffActivityLevel'), ...
+                    'NANSEN:TwoPhoton:SignalProcessingToolboxRequired')
+            end
+        end
     end
 end

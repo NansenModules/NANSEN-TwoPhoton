@@ -5,7 +5,12 @@ function stats = dffprops(dff, varargin)
 %   measurements from a dff roi signal array.
 %
 %   stats = dffprops(dff, name1, ...) Returns struct array with specified
-%   statistical measurements (Only specified fields are returned).
+%   statistical measurements (Only specified fields are returned). The
+%   names can also be given as dffprops(dff, 'Properties', {name1, ...}).
+%
+%   DffNoiseStd, DffSnr, DffStdSnr and DffActivityLevel need the Signal
+%   Processing Toolbox (pwelch estimates the noise level); requesting
+%   them without it raises NANSEN:TwoPhoton:SignalProcessingToolboxRequired.
 %
 %   INPUT:
 %       dff : matrix of dff (numSamples x numRois)
@@ -21,15 +26,17 @@ function stats = dffprops(dff, varargin)
 %   Each field values is a column vector with one row per roi.
 
     % Make sure inputs are valid
-    narginchk(1,3)
     validateattributes(dff, {'numeric'}, {'real','2d'}, mfilename, 'dff', 1);
 
-    params = struct();
-    params.Properties = 'all';
-
-    params = utility.parsenvpairs(params, 1, varargin{:});
-    getAll = ischar(params.Properties) && strcmp(params.Properties, 'all');
-    get = @(name) any( strcmp(params.Properties, name) ); %getfcn
+    % Property names arrive either positionally, dffprops(dff, name1, ...),
+    % or as the 'Properties' name-value pair.
+    if numel(varargin) == 2 && strcmpi(varargin{1}, 'Properties')
+        requestedProperties = cellstr(varargin{2});
+    else
+        requestedProperties = cellstr(varargin);
+    end
+    getAll = isempty(requestedProperties) || any(strcmp(requestedProperties, 'all'));
+    get = @(name) any( strcmp(requestedProperties, name) ); %getfcn
 
     [nSamples, nRois] = size(dff);
 
@@ -43,6 +50,13 @@ function stats = dffprops(dff, varargin)
     end
 
     if getAll || get('DffSnr') || get('DffActivityLevel') || get('DffStdSnr')
+        if exist('pwelch', 'file') ~= 2
+            error('NANSEN:TwoPhoton:SignalProcessingToolboxRequired', ...
+                ['The noise level behind DffNoiseStd, DffSnr, DffStdSnr and ', ...
+                 'DffActivityLevel is estimated with pwelch from the Signal ', ...
+                 'Processing Toolbox, which is not installed. Request only ', ...
+                 'DffPeak and DffSkewness, or install the toolbox.'])
+        end
         noiseLevel =  zeros(nRois, 1);
         for i = 1:nRois
             if any(isnan(dff(:, i))) || any(isinf(dff(:, i)))
