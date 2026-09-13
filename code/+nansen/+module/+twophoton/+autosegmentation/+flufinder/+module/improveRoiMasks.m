@@ -1,7 +1,9 @@
-function [roiArrayOut, summary] = improveRoiMasks(roiArrayIn, roiImageArray, roiType)
+function roiArrayOut = improveRoiMasks(roiArrayIn, roiImageArray, roiType)
 %improveRoiMasks Improve roi masks based on images of rois
 %
-%   [roiArrayOut, statOut] = improveRoiMasks(roiArrayIn, roiImageArray, roiType)
+%   roiArrayOut = improveRoiMasks(roiArrayIn, roiImageArray, roiType)
+%   re-estimates each roi's mask from its image and drops rois whose
+%   mask comes back empty. Per-roi statistics are not computed.
 
     import nansen.module.twophoton.autosegmentation.flufinder.binarize.getRoiMaskFromImage
     import nansen.module.twophoton.autosegmentation.flufinder.binarize.findSomaMaskByThresholding
@@ -52,16 +54,4 @@ function [roiArrayOut, summary] = improveRoiMasks(roiArrayIn, roiImageArray, roi
     end
 
     roiArrayOut = roiArrayOut(keep);
-
-    if nargout == 2
-        error('Not implemented yet')
-
-        % todo: compute stats.
-
-%         statOut(i).RoiContrast = s.dff; % Salienct
-%         statOut(i).RoiBrightness = s.val;
-    end
-
-    % statOut = struct('RoiContrast', {}, 'RoiBrightness', {});
-    % statOut = statOut(keep);
 end

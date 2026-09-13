@@ -6,6 +6,12 @@ classdef TwoPhotonRecording < handle
 %
 %   Two photon data have some special artifacts in common, and this class
 %   provides methods for correcting these when loading image frames.
+%
+%   Host class requirements: the class this mixin is combined with must be
+%   a nansen.stack.data.VirtualArray (or provide the same members). The
+%   methods below use its DataDimensionArrangement and MetaData
+%   properties and its ndims method. They cannot be declared abstract
+%   here because VirtualArray defines them with type validation.
 %       * Stretch correction : Corrects stretch artifacts in x due to the
 %           sinusoidal movement profile of the resonance scanning mirror
 %           (Some microscopes might do this internally)
@@ -136,7 +142,7 @@ classdef TwoPhotonRecording < handle
 
             firstLineToInclude = obj.NumFlybackLines + 1;
 
-            yDim = strfind(obj.DataDimensionArrangement, 'Y');
+            yDim = strfind(obj.DataDimensionArrangement, 'Y'); %#ok<MCNPN> host property
 
             ySubs = subs{yDim};
             if ischar(ySubs) && isequal(ySubs, ':')
@@ -167,9 +173,9 @@ classdef TwoPhotonRecording < handle
                     %scanParam = getSciScanVariables(folderpath, {'ZOOM', 'x.correct'});
 
                     % Todo: Make sure scan params are available...
-                    scanParam = struct('zoom', obj.MetaData.zoomFactor, 'xcorrect', 32);
+                    scanParam = struct('zoom', obj.MetaData.zoomFactor, 'xcorrect', 32); %#ok<MCNPN> host property
 
-                    isTransposed = strcmp(obj.DataDimensionArrangement(1:2), 'XY');
+                    isTransposed = strcmp(obj.DataDimensionArrangement(1:2), 'XY'); %#ok<MCNPN> host property
                     if isTransposed
                         dimOrder = 1:ndims(obj);
                         dimOrder([1:2]) = dimOrder([2,1]);

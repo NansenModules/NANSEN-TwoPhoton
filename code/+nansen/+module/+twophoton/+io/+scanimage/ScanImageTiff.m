@@ -464,29 +464,6 @@ methods (Access = protected) % Todo: Scan image and subclass
         % USING TIFF:
         n = findNumTiffDirectories(obj.tiffInfo, 1, 10000);
         obj.NumTimepoints_ = n ./ obj.NumChannels_ ./ obj.NumPlanes_;
-        return
-
-        % Need to create the memorymap in order to correct the framecount.
-        obj.createMemoryMap()
-
-        % Use the TIFFStack object and trial/error to get the correct
-        % framecount.
-        frame_low = 1;
-        frame_high = obj.NumTimepoints_;
-        frame_current = frame_high;
-
-        while frame_high - frame_low > 1
-            try
-                im = obj.hTiffStack(:,:, obj.NumChannels_, frame_current);
-                frame_low = frame_current;
-            catch e
-                frame_high = frame_current;
-            end
-
-            frame_current = frame_low + floor((frame_high - frame_low)/2);
-        end
-
-        obj.NumTimepoints_ = frame_current;
     end
 
     function numPlanes = resolveNumPlanes(~, sIParams)

@@ -1,7 +1,5 @@
 function [roisOut, statOut] = shapeDetection(im, rois, varargin)
 
-    showResults = false; % For debugging
-
     defaults.Shape = 'ring'; % 'ring' or 'disk' or 'custom'
     defaults.ShapeKernel = [];
 
@@ -128,37 +126,6 @@ function [roisOut, statOut] = shapeDetection(im, rois, varargin)
             masksSmall(:, :, i), centerCoords(i,:), masks(:, :, i));
     end
 
-    if showResults
-        nIms = size(imdata,3);
-        masks = zeros([size(im), nIms], 'logical');
-
-        for i = 1:nIms
-            center = centerCoords(i, :);
-            [maskSmall, s(i)] = nansen.module.twophoton.autosegmentation.flufinder.binarize.findSomaMaskByEdgeDetection(imdata(:,:,i));
-
-            masks(S(2):L(2), S(1):L(1), i) = roiMaskSmall;
-
-            if showResults
-                f = figure('Position', [1,1,  size(imdata,2)*4, size(imdata,1)*4], 'Visible', 'off');
-                ax = axes('Position', [0,0,1,1], 'Parent', f);
-                imagesc(ax, imresize( imdata(:,:,i), 4)) ; hold on
-
-                plot(s(i).innerEdge(:,1), s(i).innerEdge(:,2))
-                plot(s(i).outerEdge(:,1), s(i).outerEdge(:,2))
-                axis image
-
-                tmp = frame2im(getframe(f));
-                tmp = imresize(tmp, 0.5);
-
-                imdataRes(:, :, :, i) = tmp;
-                close(f)
-            end
-
-            waitbar(i/nIms,h)
-        end
-
-        close(h)
-    end
 
     %% Calculate scores
     score1 = [s.donutValue] ./ [s.nucleusValue];
@@ -167,15 +134,6 @@ function [roisOut, statOut] = shapeDetection(im, rois, varargin)
     scoreA = [s.ridgeFraction];
     scoreB = score1 .* score2;
 
-    if showResults
-        imdata2 = uint8(imdata*255);
-        imdata2 = reshape(imdata2, size(imdata,1), size(imdata,2), 1, []);
-        imdata2 = cat(3, imdata2, imdata2, imdata2);
-        imdata2 = imresize(imdata2, 4);
-
-        [~, indFinal] = sort(scoreB, 'descend');
-        imviewer(cat(2, imdata2(:,:,:,indFinal), imdataRes(:, :, :, indFinal)))
-    end
 
     % Need some ROC Analysis on this when time is available:
 
