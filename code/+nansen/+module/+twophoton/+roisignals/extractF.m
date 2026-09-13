@@ -3,7 +3,8 @@ function [signalArray, P] = extractF(imageData, roiData, varargin)
 %
 %   signals = extractF(imageStack, roiArray) extracts signals for rois in
 %   roiArray from image frames in imageData using default settings.
-%   roiArray must be a nansen.RoiArray object and imageData can be a
+%   roiArray must be an array of RoI objects (or a roimanager.roiGroup)
+%   and imageData can be a
 %   numeric array of three or more dimensions or a nansen.ImageStack
 %   object.
 %

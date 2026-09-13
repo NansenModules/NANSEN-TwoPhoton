@@ -43,9 +43,7 @@ end
 methods % Structors
 
     function obj = ThorLabsTiffs(filePath, varargin)
-        import('nansen.module.twophoton.io.thorlabs.ThorLabsTiffs')
-
-        filePath = ThorLabsTiffs.lookForMultipartFiles(filePath);
+        filePath = nansen.module.twophoton.io.thorlabs.ThorLabsTiffs.lookForMultipartFiles(filePath);
 
         obj@nansen.stack.data.VirtualArray(filePath, varargin{:})
     end

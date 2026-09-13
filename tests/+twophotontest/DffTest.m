@@ -82,12 +82,24 @@ classdef DffTest < matlab.unittest.TestCase
 
             fRoi = squeeze(signalArray(:, 1, :));
             fPil = squeeze(signalArray(:, 2, :));
-            fTrue = fRoi - 0.7*fPil + prctile(fPil, 20);
-            fTrue0 = prctile(fTrue, 20);
+            fTrue = fRoi - 0.7*fPil + prctile(fPil, 20, 1);
+            fTrue0 = prctile(fTrue, 20, 1);
             expected = (fTrue - fTrue0) ./ fTrue0;
 
             testCase.verifySize(dff, [testCase.NumSamples, testCase.NumRois])
             testCase.verifyEqual(dff, expected, 'AbsTol', testCase.AbsTol)
+        end
+
+        function testChenDffOfASingleRoiMatchesTheMultiRoiResult(testCase)
+            % The baselines must be taken along time for each ROI, so the
+            % first ROI's dF/F must not depend on the other ROIs being
+            % present.
+            signalArray = testCase.createRoiSignals(2);
+            dffAll = testCase.computeDff(signalArray, 'dffFcn', 'dffChenEtAl2013');
+            dffOne = testCase.computeDff(signalArray(:, :, 1), 'dffFcn', 'dffChenEtAl2013');
+
+            testCase.verifySize(dffOne, [testCase.NumSamples, 1])
+            testCase.verifyEqual(dffOne, dffAll(:, 1), 'AbsTol', testCase.AbsTol)
         end
 
         function testRoiMinusNeuropilDffRuns(testCase)

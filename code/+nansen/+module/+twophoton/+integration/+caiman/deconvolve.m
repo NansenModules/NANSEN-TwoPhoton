@@ -30,11 +30,7 @@ function [cia_dec, cia_den, cia_opt] = deconvolve(dff, varargin)
     % todo...
     prevstr = [];
     starttime = tic;
-    if isempty(gcp('nocreate'))
-        dispProgress = true;
-    else
-        dispProgress = false;
-    end
+    dispProgress = ~isParallelPoolRunning();
 
     if nRois < 5
         dispProgress = false;
@@ -140,4 +136,12 @@ refreshdisp('', prevstr, r)
 msg = sprintf('Signal deconvolution finished in %02d:%02d\n', floor(dt/60), round(mod(dt, 60)));
 fprintf(msg)
 end
+end
+
+function tf = isParallelPoolRunning()
+%isParallelPoolRunning True if a parallel pool is open
+%
+%   gcp belongs to the Parallel Computing Toolbox, which the module lists
+%   as optional, so it must not be called when the toolbox is absent.
+    tf = exist('gcp', 'file') == 2 && ~isempty(gcp('nocreate'));
 end
