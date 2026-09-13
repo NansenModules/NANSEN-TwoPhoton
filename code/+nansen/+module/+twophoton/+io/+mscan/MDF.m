@@ -122,36 +122,6 @@ classdef MDF < nansen.stack.data.VirtualArray
 
     methods (Access = private)
 
-        function resolveDataSizeAndDimensionArrangement(obj, stackSize)
-            % Todo: Remove when this is merged into main branch from
-            % dev-imagestack-5d
-
-            % Find singleton dimensions.
-            isSingleton = stackSize == 1;
-
-            % Get arrangement of dimensions of data
-            try
-                % Note subclasses might implement this as a constant
-                % property. If it's not implemented, use default DDA
-                dataDimensionArrangement = obj.DATA_DIMENSION_ARRANGEMENT;
-            catch
-                dataDimensionArrangement = obj.DEFAULT_DIMENSION_ARRANGEMENT;
-            end
-
-            % Get order of dimensions of data
-            [~, ~, dimensionOrder] = intersect( obj.DEFAULT_DIMENSION_ARRANGEMENT, ...
-                dataDimensionArrangement, 'stable' );
-
-            % Rearrange beased on dimension order
-            isSingleton_(dimensionOrder) = isSingleton;
-            dataSize(dimensionOrder) = stackSize;
-
-            % Assign size and dimension arrangement for data excluding
-            % singleton dimension.
-            obj.DataSize = dataSize(~isSingleton_);
-            obj.DataDimensionArrangement = dataDimensionArrangement(~isSingleton_);
-        end
-
         function mdfParams = getScanParameters(obj)
             import nansen.module.twophoton.io.mscan.getScanParameters
             mdfParams = getScanParameters(obj.mfile);

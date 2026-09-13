@@ -58,16 +58,27 @@ function [roisOut, summary] = findUniqueRoisFromComponents(imageSize, S, varargi
     % Boolean for all remaining components that wasn't taken care of yet
     remaining = true(numel(S), 1);
 
-    % Create a "sum projection" image of all components.
-    uniquePixelList = unique(allPixelIndices);
-
+    % Create a "sum projection" image of all components: the number of
+    % components each pixel belongs to. accumarray counts every pixel,
+    % including the last unique one, and copes with zero or one pixel
+    % (histcounts needs at least two bin edges).
     componentImage = zeros(imageSize);
-    % Using a histogram here is faster than a for loop.      % (Maybe only if there are 100ks of components...)
-    [N,E] = histcounts(allPixelIndices, uniquePixelList);
-    componentImage(E(1:end-1)) = N;
+    if ~isempty(allPixelIndices)
+        componentImage(:) = accumarray(allPixelIndices(:), 1, [numel(componentImage), 1]);
+    end
 
     summary.ComponentImageInit = componentImage;
+    summary.ComponentImageFinished = componentImage;
     %imviewer(componentImage) % Todo: return this as part of summary
+
+    if isempty(S) || isempty(allPixelIndices)
+        % Nothing to pick from; the merge and tagging below need rois.
+        warning('on', 'stats:linkage:NonMonotonicTree')
+        if nargout == 1
+            clear summary
+        end
+        return
+    end
 
     mask = false(imageSize);
 
@@ -83,7 +94,12 @@ function [roisOut, summary] = findUniqueRoisFromComponents(imageSize, S, varargi
 
         % Find peak in the summed component image. This will be the most
         % active roi among candidates
-        [~, peakInd] = max(componentImage(:));
+        [peakValue, peakInd] = max(componentImage(:));
+        if peakValue <= 0
+            % Every remaining pixel has been cleared; without this guard
+            % the loop would spin on an empty peak forever.
+            break
+        end
 
         % Find all components that contain this peak
         containsPeak = regionInd(allPixelIndices==peakInd);

@@ -109,20 +109,6 @@ classdef Processor < nansen.module.twophoton.autosegmentation.RoiSegmentation & 
                     obj.mergeResults()
                 end
 
-                % % % Todo: The following should be a separate session method...
-                % % if isempty(obj.OriginalStack)
-                % %     sourceStack = obj.SourceStack;
-                % % else
-                % %     sourceStack = obj.OriginalStack;
-                % % end
-                % %
-                % % % Get temporal segments
-                % % tExtracor = nansen.module.twophoton.integration.extract.ProcessorT(...
-                % %     sourceStack, obj.Options, obj.MergedResults);
-                % % tExtracor.Options.Run.numFramesPerPart = 2000;
-                % % tExtracor.DataIoModel = obj.DataIoModel;
-                % %
-                % % tExtracor.runMethod()
             end
 
             %obj.createRoiClassificationData()

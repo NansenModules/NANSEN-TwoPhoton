@@ -16,8 +16,8 @@ function dff_true = dffChenEtAl2013(signalArray, varargin)
         fPil = squeeze( mean(signalArray(:, 2:end, :), 2) );
     end
 
-    npil_true0 = prctile(fPil, 20);
+    npil_true0 = prctile(fPil, 20, 1);
     f_true = fRoi - (0.7*fPil) + npil_true0;
-    f_true0 = prctile(f_true, 20);
+    f_true0 = prctile(f_true, 20, 1);
     dff_true = (f_true - f_true0) ./ f_true0;
 end

@@ -431,7 +431,7 @@ methods (Static)
         inistring = fileread(iniFilePath);
 
         sciscanVars = {'external.start.trigger.enable', 'aocard.model'};
-        isValid = contains(inistring, sciscanVars);
+        isValid = all(contains(inistring, sciscanVars));
     end
 end
 

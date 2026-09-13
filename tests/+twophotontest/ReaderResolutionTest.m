@@ -17,6 +17,15 @@ classdef ReaderResolutionTest < matlab.unittest.TestCase
 %       runtests('twophotontest.ReaderResolutionTest')
 
     properties (TestParameter)
+        ReaderClass = { ...
+            'nansen.module.twophoton.io.sciscan.SciScanRaw', ...
+            'nansen.module.twophoton.io.scanimage.ScanImageTiff', ...
+            'nansen.module.twophoton.io.scanimage.ScanImageMultiRoiTiff', ...
+            'nansen.module.twophoton.io.prairieview.PrairieViewTiffs', ...
+            'nansen.module.twophoton.io.thorlabs.ThorLabsTiffs', ...
+            'nansen.module.twophoton.io.mscan.MDF', ...
+            'nansen.module.twophoton.integration.suite2p.Suite2pCorrected'}
+
         FilenameCase = struct( ...
             'prairieView', struct( ...
                 'filename', 'TSeries-01012020-0001_Cycle00001_Ch1_000001.ome.tif', ...
@@ -58,6 +67,30 @@ classdef ReaderResolutionTest < matlab.unittest.TestCase
     end
 
     methods (Test)
+
+        function testReaderClassLoads(testCase, ReaderClass)
+            % A reader whose class definition cannot be loaded (for example
+            % an override of a sealed superclass method) is unusable from
+            % every entry point, so every reader must at least load.
+            metaClass = meta.class.fromName(ReaderClass);
+            testCase.verifyNotEmpty(metaClass, ...
+                sprintf('Reader class "%s" did not load', ReaderClass))
+        end
+
+        function testSciScanPredicateReturnsScalarLogical(testCase)
+            folderPath = testCase.makeFixtureFolder();
+            baseName = '20200101_12_00_00_recording';
+            rawFilePath = fullfile(folderPath, [baseName, '.raw']);
+            testCase.writeText(rawFilePath, '');
+            testCase.writeText(fullfile(folderPath, [baseName, '.ini']), sprintf( ...
+                'external.start.trigger.enable = TRUE\naocard.model = PCI-6110\n'));
+
+            isValid = nansen.module.twophoton.io.sciscan.SciScanRaw.fileCheck(rawFilePath);
+
+            testCase.verifyClass(isValid, 'logical')
+            testCase.verifySize(isValid, [1, 1])
+            testCase.verifyTrue(isValid)
+        end
 
         function testFilenameExpressionReaders(testCase, FilenameCase)
             className = testCase.resolve(FilenameCase.filename);

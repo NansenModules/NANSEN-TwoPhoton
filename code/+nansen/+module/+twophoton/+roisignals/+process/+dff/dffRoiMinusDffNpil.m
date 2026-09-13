@@ -51,6 +51,13 @@ function dff = dffRoiMinusDffNpil(signalArray, varargin)
         if ~isa(deltaDff, 'double') || ~isa(dffNpil, 'double')
             deltaDff = double(deltaDff); dffNpil = double(dffNpil);
         end
+        if exist('sgolayfilt', 'file') ~= 2
+            error('NANSEN:TwoPhoton:SignalProcessingToolboxRequired', ...
+                ['The dF/F method "dffRoiMinusDffNpil" uses sgolayfilt from the ', ...
+                 'Signal Processing Toolbox, which is not installed. Install the ', ...
+                 'toolbox, set smoothSignals to true, or choose another dffFcn ', ...
+                 'such as dffClassic.'])
+        end
         baselineCorrection = sgolayfilt(deltaDff, 3, 11);
         dff = dffRoi - sgolayfilt(dffNpil, 3, 11) + baselineCorrection;
     end

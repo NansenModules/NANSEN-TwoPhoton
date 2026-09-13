@@ -13,8 +13,7 @@ classdef Suite2pCorrected < nansen.stack.virtual.TiffMultiPart
     methods % Structors
 
         function obj = Suite2pCorrected(filePath, varargin)
-            import('nansen.module.twophoton.integration.suite2p.Suite2pCorrected')
-            filePath = Suite2pCorrected.lookForMultipartFiles(filePath);
+            filePath = nansen.module.twophoton.integration.suite2p.Suite2pCorrected.lookForMultipartFiles(filePath);
 
             obj@nansen.stack.virtual.TiffMultiPart(filePath, varargin{:})
         end
